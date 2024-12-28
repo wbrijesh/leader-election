@@ -2,10 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: leader-election-deployment
-  labels:
-    app: leader-election
 spec:
-  replicas: 5 # Set the number of replicas to 5
+  replicas: 5
   selector:
     matchLabels:
       app: leader-election
@@ -14,9 +12,19 @@ spec:
       labels:
         app: leader-election
     spec:
+      serviceAccountName: leader-election-sa
       containers:
         - name: leader-election
-          image: leader-election:latest # Use the local image built
-          ports:
-            - containerPort: 8080
-          imagePullPolicy: Never # Since we're using a locally built image
+          image: leader-election:latest
+          imagePullPolicy: Never
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: data-volume
+          emptyDir: {}
